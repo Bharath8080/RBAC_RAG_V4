@@ -1,33 +1,26 @@
-# Fix for SQLite version issue with ChromaDB
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-
-
+# Use built-in sqlite3 module
+import sqlite3
 
 import os
 import streamlit as st
 import chromadb
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from pathlib import Path
 from dotenv import load_dotenv
 from llama_index.core import VectorStoreIndex, StorageContext, Settings
 from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.llms.cerebras import Cerebras
 from llama_index.llms.groq import Groq
 from llama_index.embeddings.cohere import CohereEmbedding
+
+# Import database module
+from database import db, initialize_users
 
 # Load environment variables
 load_dotenv()
 
-# Dummy user database
-USERS_DB = {
-    "Tony": {"password": "password123", "role": "engineering"},
-    "Bruce": {"password": "securepass", "role": "marketing"},
-    "Sam": {"password": "financepass", "role": "finance"},
-    "Peter": {"password": "pete123", "role": "engineering"},
-    "Sid": {"password": "sidpass123", "role": "marketing"},
-    "Natasha": {"password": "hrpass123", "role": "hr"}
-}
+# Initialize default users
+initialize_users()
 
 # Role-based access control for documents
 ROLE_ACCESS = {
@@ -39,6 +32,7 @@ ROLE_ACCESS = {
 
 # Initialize session state
 def initialize_session_state():
+    """Initialize or reset the session state"""
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
     if "username" not in st.session_state:
@@ -47,33 +41,59 @@ def initialize_session_state():
         st.session_state.role = None
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    if "vector_index" not in st.session_state:
+        st.session_state.vector_index = None
+    if "query_engine" not in st.session_state:
+        st.session_state.query_engine = None
 
 # Set page config
 st.set_page_config(
     page_title="Departmental RAG System",
     page_icon="🔒",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # Initialize session state
 initialize_session_state()
 
+# Authentication functions
 def login(username: str, password: str) -> bool:
-    """Authenticate user and set session state"""
-    if username in USERS_DB and USERS_DB[username]["password"] == password:
-        st.session_state.authenticated = True
-        st.session_state.username = username
-        st.session_state.role = USERS_DB[username]["role"]
-        st.session_state.messages = []
-        return True
-    return False
+    """
+    Authenticate user and set session state
+    
+    Args:
+        username: The username to authenticate
+        password: The password to verify
+        
+    Returns:
+        bool: True if authentication was successful, False otherwise
+    """
+    try:
+        user = db.verify_user(username, password)
+        if user:
+            st.session_state.authenticated = True
+            st.session_state.username = user["username"]
+            st.session_state.role = user["role"]
+            st.session_state.messages = [
+                {"role": "assistant", "content": f"Welcome, {user['username']}! How can I assist you today?"}
+            ]
+            st.rerun()  # Rerun to update the UI
+            return True
+        return False
+    except Exception as e:
+        st.error(f"An error occurred during login: {str(e)}")
+        return False
 
 def logout():
-    """Log out the current user"""
-    st.session_state.authenticated = False
-    st.session_state.username = None
-    st.session_state.role = None
-    st.session_state.messages = []
+    """
+    Log out the current user and clear session state
+    """
+    username = st.session_state.get('username', 'Unknown')
+    st.session_state.clear()
+    initialize_session_state()
+    st.success(f"Successfully logged out {username}")
+    st.rerun()  # Rerun to update the UI
 
 @st.cache_resource
 def load_vector_index(role: str):
@@ -179,45 +199,88 @@ def chat_interface():
         # Add assistant response to chat history
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-def main():
-    """Main application"""
-    # Sidebar
-    with st.sidebar:
-        st.title("🔒 Department RAG System")
-        
-        if st.session_state.authenticated:
-            st.write(f"Logged in as: **{st.session_state.username}**")
-            st.write(f"Role: **{st.session_state.role.capitalize()}**")
-            
-            if st.button("Logout"):
-                logout()
-                st.rerun()
-            
-            st.markdown("---")
-            st.write("### Available Documents")
-            for doc_type in ROLE_ACCESS.get(st.session_state.role, []):
-                st.write(f"- {doc_type.capitalize()} documents")
-            
-            st.markdown("---")
-            st.write("### About")
-            st.write("This is a secure RAG system with role-based access control.")
-        else:
-            st.write("### Login")
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
-            
-            if st.button("Login"):
-                if login(username, password):
-                    st.rerun()
-                else:
-                    st.error("Invalid username or password")
+def show_login_form():
+    """Display the login form"""
+    st.title("🔒 Departmental RAG System")
+    st.markdown("### Please log in to access the system")
     
-    # Main content
-    if st.session_state.authenticated:
-        chat_interface()
+    with st.container():
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            with st.form("login_form"):
+                username = st.text_input("Username")
+                password = st.text_input("Password", type="password")
+                login_button = st.form_submit_button("Login")
+                
+                if login_button:
+                    if not username or not password:
+                        st.error("Please enter both username and password")
+                    elif login(username, password):
+                        st.success(f"Welcome, {username}! Redirecting...")
+                    else:
+                        st.error("Invalid username or password")
+
+    # Add some helpful information
+    st.markdown("---")
+    st.markdown("""
+    ### Demo Credentials
+    - **Engineering:** Tony / password123
+    - **Marketing:** Bruce / securepass
+    - **Finance:** Sam / financepass
+    - **HR:** Natasha / hrpass123
+    """)
+
+def main():
+    """
+    Main application entry point
+    Handles routing between login and main application
+    """
+    # Custom CSS for better styling
+    st.markdown("""
+    <style>
+        .main .block-container {
+            padding-top: 2rem;
+        }
+        .stTextInput input, .stTextInput input:focus {
+            border: 1px solid #4a90e2 !important;
+            box-shadow: 0 0 0 1px #4a90e2 !important;
+        }
+        .stButton>button {
+            width: 100%;
+            border-radius: 5px;
+            background-color: #4a90e2;
+            color: white;
+        }
+        .stButton>button:hover {
+            background-color: #357abd;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Sidebar for logout and user info
+    with st.sidebar:
+        if st.session_state.authenticated:
+            st.markdown(f"### Welcome, {st.session_state.username}")
+            st.markdown(f"**Role:** {st.session_state.role.capitalize()}")
+            
+            if st.button("Logout", key="logout_btn"):
+                logout()
+                return
+            
+            st.markdown("---")
+            st.markdown("### About")
+            st.markdown("""
+            This is a secure departmental RAG system that provides
+            role-based access to information across different departments.
+            """)
+    
+    # Main content area
+    if not st.session_state.authenticated:
+        show_login_form()
     else:
-        st.title("🔒 Department RAG System")
-        st.write("Please log in to access the system.")
+        # Display chat interface if authenticated
+        st.title(f"💬 {st.session_state.role.capitalize()} Department Chat")
+        chat_interface()
 
 if __name__ == "__main__":
     main()
