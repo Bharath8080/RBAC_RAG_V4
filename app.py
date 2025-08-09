@@ -140,7 +140,8 @@ def load_vector_index(role: str):
 
 def chat_interface():
     """Main chat interface"""
-    st.title(f"💬 {st.session_state.role.capitalize()} Department Chat")
+    # Add styled heading
+    st.markdown(f"<h2 style='color: #1407fa;'>💬 {st.session_state.role.capitalize()} Department Chat</h3>", unsafe_allow_html=True)
     
     # Display chat messages
     for message in st.session_state.messages:
