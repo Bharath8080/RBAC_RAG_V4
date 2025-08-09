@@ -9,7 +9,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 from llama_index.core import VectorStoreIndex, StorageContext, Settings
 from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.llms.cerebras import Cerebras
 from llama_index.llms.groq import Groq
 from llama_index.embeddings.cohere import CohereEmbedding
 
