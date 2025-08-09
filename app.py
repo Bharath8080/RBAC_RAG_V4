@@ -50,8 +50,8 @@ def initialize_session_state():
 st.set_page_config(
     page_title="Departmental RAG System",
     page_icon="🔒",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
 # Initialize session state
@@ -138,19 +138,23 @@ def load_vector_index(role: str):
 
 def chat_interface():
     """Main chat interface"""
-    st.title(f"🔒 {st.session_state.role.capitalize()} Department Assistant")
-    st.write(f"Welcome, {st.session_state.username}!")
+    st.title(f"💬 {st.session_state.role.capitalize()} Department Chat")
     
+    # Display chat messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
     # Load the appropriate index for the user's role
     index = load_vector_index(st.session_state.role)
     
-    # Initialize Cerebras LLM
+    # Initialize Groq LLM
     try:
         llm = Groq(
-            model="openai/gpt-oss-120b",  # Using a smaller model for demo
+            model="llama3-8b-8192", 
             api_key=os.getenv("GROQ_API_KEY"),
             temperature=0.5,
-            system_prompt="You are a helpful assistant specialized in " + st.session_state.role + " department documents. Answer the user queries with the help of the provided context with high accuracy and precision."  # Optional if using local instance
+            system_prompt=f"You are a helpful assistant specialized in {st.session_state.role} department documents. Answer the user queries with the help of the provided context with high accuracy and precision."
         )
         
         # Create query engine with the LLM
@@ -166,11 +170,6 @@ def chat_interface():
             similarity_top_k=3,
             response_mode="compact"
         )
-    
-    # Display chat messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
     
     # Chat input
     if prompt := st.chat_input(f"Ask about {st.session_state.role} documents..."):
@@ -200,66 +199,83 @@ def chat_interface():
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 def show_login_form():
-    """Display the login form"""
-    st.title("🔒 Departmental RAG System")
-    st.markdown("### Please log in to access the system")
-    
-    with st.container():
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            with st.form("login_form"):
-                username = st.text_input("Username")
-                password = st.text_input("Password", type="password")
-                login_button = st.form_submit_button("Login")
-                
-                if login_button:
-                    if not username or not password:
-                        st.error("Please enter both username and password")
-                    elif login(username, password):
-                        st.success(f"Welcome, {username}! Redirecting...")
-                    else:
-                        st.error("Invalid username or password")
+    """Display the beautiful login form"""
+    st.markdown(
+        """
+        <style>
+            .main {
+                background-color: #1a1a2e;
+                color: white;
+            }
+            .stTextInput > div > div > input {
+                background-color: #2a2a3e;
+                color: white;
+                border: 1px solid #4a4a6a;
+                border-radius: 8px;
+            }
+            .stButton > button {
+                background-color: #e94560;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-size: 16px;
+                width: 100%;
+            }
+            .stButton > button:hover {
+                background-color: #d83450;
+            }
+            h1, h2, h3, h4, h5, h6 {
+                color: white;
+            }
+            .st-emotion-cache-1r6slb0 {
+                border: 1px solid #4a4a6a;
+                border-radius: 12px;
+                padding: 2rem;
+                background-color: #232339;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    st.markdown('<div style="text-align: center; margin-top: -80px; margin-bottom: 30px;"><h1 style="font-size: 3rem;">🔒</h1></div>', unsafe_allow_html=True)
+    st.markdown('<h1 style="text-align: center; margin-bottom: 20px;">Department Portal</h1>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; color: #a0a0b0; margin-bottom: 30px;">Sign in to access your department\'s knowledge base</p>', unsafe_allow_html=True)
 
-    # Add some helpful information
-    st.markdown("---")
-    st.markdown("""
-    ### Demo Credentials
-    - **Engineering:** Tony / password123
-    - **Marketing:** Bruce / securepass
-    - **Finance:** Sam / financepass
-    - **HR:** Natasha / hrpass123
-    """)
+    with st.container():
+        with st.form("login_form", border=True):
+            username = st.text_input("Username", placeholder="Enter your username")
+            password = st.text_input("Password", type="password", placeholder="Enter your password")
+            login_button = st.form_submit_button("Sign In")
+            
+            if login_button:
+                if not username or not password:
+                    st.error("Please enter both username and password")
+                elif login(username, password):
+                    st.success(f"Welcome, {username}! Redirecting...")
+                else:
+                    st.error("Invalid username or password")
+
+    with st.expander("Need demo credentials?"):
+        st.markdown("""
+        - **Engineering:** `Tony` / `password123`
+        - **Marketing:** `Bruce` / `securepass`
+        - **Finance:** `Sam` / `financepass`
+        - **HR:** `Natasha` / `hrpass123`
+        """)
+
+    st.markdown('<p style="text-align: center; margin-top: 2rem; color: #a0a0b0;">2025 Department RAG System</p>', unsafe_allow_html=True)
+
 
 def main():
     """
     Main application entry point
     Handles routing between login and main application
     """
-    # Custom CSS for better styling
-    st.markdown("""
-    <style>
-        .main .block-container {
-            padding-top: 2rem;
-        }
-        .stTextInput input, .stTextInput input:focus {
-            border: 1px solid #4a90e2 !important;
-            box-shadow: 0 0 0 1px #4a90e2 !important;
-        }
-        .stButton>button {
-            width: 100%;
-            border-radius: 5px;
-            background-color: #4a90e2;
-            color: white;
-        }
-        .stButton>button:hover {
-            background-color: #357abd;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-    
     # Sidebar for logout and user info
-    with st.sidebar:
-        if st.session_state.authenticated:
+    if st.session_state.authenticated:
+        st.set_page_config(layout="wide", initial_sidebar_state="expanded")
+        with st.sidebar:
             st.markdown(f"### Welcome, {st.session_state.username}")
             st.markdown(f"**Role:** {st.session_state.role.capitalize()}")
             
@@ -278,8 +294,6 @@ def main():
     if not st.session_state.authenticated:
         show_login_form()
     else:
-        # Display chat interface if authenticated
-        st.title(f"💬 {st.session_state.role.capitalize()} Department Chat")
         chat_interface()
 
 if __name__ == "__main__":
