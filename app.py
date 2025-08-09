@@ -2,6 +2,8 @@ __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
+import sqlite3
+
 import os
 import streamlit as st
 import chromadb
@@ -212,6 +214,10 @@ def show_login_form():
                 color: white;
                 border: 1px solid #4a4a6a;
                 border-radius: 8px;
+            }
+            .stTextInput > div > div > input::placeholder {
+                color: #a0a0b0 !important;
+                opacity: 1 !important;
             }
             .stButton > button {
                 background-color: #e94560;
