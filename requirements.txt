@@ -12,5 +12,4 @@ llama-index-embeddings-cohere
 ipython
 llama-index-vector-stores-chroma
 llama-index-llms-groq
-pysqlite3-binary
-
+pysqlite3
