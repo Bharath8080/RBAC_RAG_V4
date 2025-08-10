@@ -14,5 +14,4 @@ llama-index-llms-groq
 pysqlite3-binary
 pymongo
 bcrypt
-agentops 
-llama-index-instrumentation-agentops
+
