@@ -15,6 +15,10 @@ from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.llms.groq import Groq
 from llama_index.embeddings.cohere import CohereEmbedding
 
+
+from llama_index.core import set_global_handler
+set_global_handler("agentops")
+
 # Import database module
 from database import db, initialize_users
 
