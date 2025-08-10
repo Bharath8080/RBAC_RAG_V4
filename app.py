@@ -23,7 +23,7 @@ from openinference.instrumentation.llama_index import LlamaIndexInstrumentor
 tracer_provider = register(
     space_id=os.getenv("ARIZE_SPACE_ID"),
     api_key=os.getenv("ARIZE_API_KEY"),
-    project_name="my-llamaindex-app" # Choose a project name
+    project_name="rbacrag" # Choose a project name
 )
 
 # Instrument LlamaIndex
