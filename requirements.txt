@@ -14,4 +14,4 @@ llama-index-llms-groq
 pysqlite3-binary
 pymongo
 bcrypt
-langchain
+langsmith
