@@ -15,6 +15,20 @@ from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.llms.groq import Groq
 from llama_index.embeddings.cohere import CohereEmbedding
 
+
+from arize.otel import register
+from openinference.instrumentation.llama_index import LlamaIndexInstrumentor
+
+# Setup OTel via Arize's convenience function
+tracer_provider = register(
+    space_id=os.getenv("ARIZE_SPACE_ID"),
+    api_key=os.getenv("ARIZE_API_KEY"),
+    project_name="my-llamaindex-app" # Choose a project name
+)
+
+# Instrument LlamaIndex
+LlamaIndexInstrumentor().instrument(tracer_provider=tracer_provider)
+
 # Import database module
 from database import db, initialize_users
 
