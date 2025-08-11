@@ -126,6 +126,7 @@ db = Database()
 def initialize_users():
     """
     Initialize default users if they don't exist.
+    Only adds users that don't already exist in the database.
     Returns tuple of (success_count, total_users, errors)
     """
     from datetime import datetime
@@ -142,20 +143,34 @@ def initialize_users():
     success_count = 0
     errors = []
     
+    # Get list of existing usernames
+    existing_users = set(user['username'] for user in db.users.find({}, {"username": 1, "_id": 0}))
+    
     for user in default_users:
+        username = user["username"]
+        if username in existing_users:
+            logger.debug(f"User already exists, skipping: {username}")
+            success_count += 1  # Count as success since user exists
+            continue
+            
         try:
-            if db.add_user(user["username"], user["password"], user["role"]):
+            if db.add_user(username, user["password"], user["role"]):
                 success_count += 1
-                logger.info(f"Initialized user: {user['username']}")
+                logger.info(f"Initialized new user: {username}")
             else:
-                errors.append(f"Failed to add user: {user['username']}")
+                errors.append(f"Failed to add user: {username}")
         except Exception as e:
-            error_msg = f"Error initializing user {user['username']}: {str(e)}"
+            error_msg = f"Error initializing user {username}: {str(e)}"
             logger.error(error_msg)
             errors.append(error_msg)
     
-    logger.info(f"User initialization complete. Success: {success_count}/{len(default_users)}")
-    if errors:
-        logger.warning(f"Encountered {len(errors)} errors during user initialization")
+    total_users = len(default_users)
+    if success_count == total_users:
+        if success_count > 0:
+            logger.info(f"User initialization successful. All {success_count} users are ready.")
+    else:
+        logger.info(f"User initialization complete. Success: {success_count}/{total_users}")
+        if errors:
+            logger.warning(f"Encountered {len(errors)} errors during user initialization")
     
-    return success_count, len(default_users), errors
+    return success_count, total_users, errors
