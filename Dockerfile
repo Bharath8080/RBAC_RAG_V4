@@ -1,32 +1,37 @@
-# Use official Python image as base
-FROM python:3.10-slim
+# Build stage
+FROM python:3.10-slim as builder
 
-# Set working directory
 WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc g++ && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir --prefer-binary -r requirements.txt
+
+# Production stage
+FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    STREAMLIT_SERVER_PORT=8501 \
-    STREAMLIT_SERVER_HEADLESS=true \
-    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    PATH=/home/app/.local/bin:$PATH
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy installed packages from builder stage
+COPY --from=builder /root/.local /home/app/.local
 
-# Copy the rest of the application
-COPY . .
+# Copy application code
+COPY --chown=app:app . .
 
-# Expose the port Streamlit runs on
+USER app
+
 EXPOSE 8501
 
-# Command to run the application
 CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
