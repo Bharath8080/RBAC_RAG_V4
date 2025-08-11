@@ -1,37 +1,51 @@
-# Build stage
-FROM python:3.10-slim as builder
-
-WORKDIR /app
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc g++ && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --user --no-cache-dir --prefer-binary -r requirements.txt
-
-# Production stage
+# Use Python slim image instead of full Python
 FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PATH=/home/app/.local/bin:$PATH
+    STREAMLIT_SERVER_PORT=8501 \
+    STREAMLIT_SERVER_HEADLESS=true \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-WORKDIR /app
+# Install only essential system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash app
+# Upgrade pip for better dependency resolution
+RUN pip install --upgrade pip
 
-# Copy installed packages from builder stage
-COPY --from=builder /root/.local /home/app/.local
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt .
 
-# Copy application code
-COPY --chown=app:app . .
+# Install Python dependencies with optimizations
+RUN pip install --no-cache-dir \
+    --prefer-binary \
+    --timeout=300 \
+    -r requirements.txt
 
+# Copy the rest of the application
+COPY . .
+
+# Create a non-root user for security
+RUN useradd --create-home --shell /bin/bash app \
+    && chown -R app:app /app
 USER app
 
+# Expose the port Streamlit runs on
 EXPOSE 8501
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8501/_stcore/health || exit 1
+
+# Command to run the application
 CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
