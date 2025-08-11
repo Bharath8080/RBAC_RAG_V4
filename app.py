@@ -168,7 +168,7 @@ def chat_interface():
     # Initialize Groq LLM
     try:
         llm = Groq(
-            model="llama3-8b-8192", 
+            model="openai/gpt-oss-20b", 
             api_key=os.getenv("GROQ_API_KEY"),
             temperature=0.5,
             system_prompt=f"You are a helpful assistant specialized in {st.session_state.role} department documents. Answer the user queries with the help of the provided context with high accuracy and precision."
