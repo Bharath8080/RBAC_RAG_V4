@@ -124,7 +124,7 @@ RBAC_RAG_V4/
 
 1. Place documents in the appropriate department folder under `resources/data/`
 2. Run `python ingest.py` to update the vector store
-
+![Image](https://github.com/user-attachments/assets/356344b5-e06b-4952-bd22-548182668c83)
 ## 🛡️ Security Notes
 
 - Always store sensitive information in environment variables, never in code
