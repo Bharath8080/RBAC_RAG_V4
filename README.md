@@ -2,6 +2,8 @@
 
 A production-ready Streamlit-based RAG (Retrieval-Augmented Generation) application with MongoDB authentication and role-based access control. This application allows users to securely access and query department-specific documents based on their assigned roles.
 
+![Image](https://github.com/user-attachments/assets/03c94e7c-9140-456f-8b17-82bf16fd097c)
+
 ![Image](https://github.com/user-attachments/assets/f8a91110-a40f-4f7f-8c76-43fd0932e10c)
 
 ## ✨ Features
