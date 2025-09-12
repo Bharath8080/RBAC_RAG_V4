@@ -1,0 +1,74 @@
+[server]
+enableStaticServing = true
+
+# ---------------------------
+# Font Faces
+# ---------------------------
+[[theme.fontFaces]]
+family = "SpaceGrotesk"
+url = "app/static/SpaceGrotesk-VariableFont_wght.ttf"
+
+[[theme.fontFaces]]
+family = "SpaceMono"
+url = "app/static/SpaceMono-Regular.ttf"
+style = "normal"
+weight = 400
+
+[[theme.fontFaces]]
+family = "SpaceMono"
+url = "app/static/SpaceMono-Italic.ttf"
+style = "italic"
+weight = 400
+
+[[theme.fontFaces]]
+family = "SpaceMono"
+url = "app/static/SpaceMono-Bold.ttf"
+style = "normal"
+weight = 700
+
+[[theme.fontFaces]]
+family = "SpaceMono"
+url = "app/static/SpaceMono-BoldItalic.ttf"
+style = "italic"
+weight = 700
+
+# ---------------------------
+# Theme Settings
+# ---------------------------
+[theme]
+primaryColor = "#E94E1B"                  # 🔥 Bold orange-red
+backgroundColor = "#FAF9F6"               # Off-white for warmth
+secondaryBackgroundColor = "#EEEDE8"      # Subtle secondary contrast
+textColor = "#2A2A2A"                     # Deep charcoal for readability
+linkColor = "#E94E1B"                     # Links match primary
+borderColor = "#D1D0C9"                   # Softer borders
+showWidgetBorder = true
+baseRadius = "1rem"
+buttonRadius = "full"
+
+# Typography
+font = "SpaceGrotesk"
+headingFontWeights = [700,600,500,500,500,500]
+headingFontSizes = ["3.25rem", "2.25rem"] # Larger + bolder headings
+codeFont = "SpaceMono"
+codeFontSize = "0.85rem"
+codeBackgroundColor = "#F0EFEB"
+
+# UI Enhancements
+showSidebarBorder = true
+chartCategoricalColors = [
+    "#2563eb",  # Blue
+    "#16a34a",  # Green
+    "#f97316",  # Orange
+    "#e11d48",  # Pink-Red
+    "#9333ea"   # Purple
+]
+
+# ---------------------------
+# Sidebar Styling
+# ---------------------------
+[theme.sidebar]
+backgroundColor = "#F4F3EF"
+secondaryBackgroundColor = "#EDEDE8"
+headingFontSizes = ["1.8rem", "1.5rem", "1.25rem"]
+dataframeHeaderBackgroundColor = "#E6E5E0"
