@@ -295,7 +295,7 @@ def main():
     """
     # Sidebar for logout and user info
     if st.session_state.authenticated:
-        st.set_page_config(layout="wide", initial_sidebar_state="expanded")
+        st.set_page_config(layout="centered", initial_sidebar_state="expanded")
         with st.sidebar:
             st.markdown(f"### Welcome, {st.session_state.username}")
             st.markdown(f"**Role:** {st.session_state.role.capitalize()}")
