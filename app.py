@@ -260,7 +260,7 @@ def show_login_form():
         unsafe_allow_html=True
     )
     st.markdown('<div style="text-align: center; margin-top: -80px; margin-bottom: 30px;"><h1 style="font-size: 3rem;">🔒</h1></div>', unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; margin-bottom: 20px; color: #2c3e50; font-weight: bold; font-family: Arial Black, sans-serif;'>🏛️ Department Portal</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; margin-bottom: 20px; color: #f77a05; font-weight: bold; font-family: Arial Black, sans-serif;'>Department Portal</h1>", unsafe_allow_html=True)
     st.markdown('<p style="text-align: center; color: #a0a0b0; margin-bottom: 30px;">Sign in to access your department\'s knowledge base</p>', unsafe_allow_html=True)
 
     with st.container():
